@@ -1,0 +1,393 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agentic-swarm",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "129a90c5-6cc7-4ce2-9530-1c7aca87261b",
+      "name": "Webhook",
+      "webhookId": "6e4d853d-bb39-4c58-a3ef-7e2a9cb9b8d7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5ffb0d63-a4e5-4094-8a15-2b65484e1aa0",
+              "name": "business_challenge",
+              "value": "={{ $json.body.business_challenge }}",
+              "type": "string"
+            },
+            {
+              "id": "aa5930f4-cb78-484c-832d-7fb9993b2f07",
+              "name": "is_surprise_round",
+              "value": "={{ $json.body.is_surprise_round }}",
+              "type": "string"
+            },
+            {
+              "id": "81eab1fc-0f03-40fc-b588-ebc5de824f29",
+              "name": "surprise_condition",
+              "value": "={{ $json.body.surprise_condition }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "95b71bed-e3c7-4e15-8c3c-ab0ca13342f9",
+      "name": "Node 2: Set Brief & baseline State"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Business Research Agent. Analyze the business challenge below. Focus strictly on market sizing, target customer profiles, competitor actions, and overall opportunity and risk. Provide 3 concrete evidence-based findings.\n\nBusiness Brief:\n{{ $('Node 2: Set Brief & baseline State').item.json.is_surprise_round ? $('Node 2: Set Brief & baseline State').item.json.business_challenge + ' SURPRISE CONDITION: ' + $('Node 2: Set Brief & baseline State').item.json.surprise_condition : $('Node 2: Set Brief & baseline State').item.json.business_challenge }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        -192
+      ],
+      "id": "53193e29-c899-46fd-94ae-28ccad841f5b",
+      "name": "Node 3: Research Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Chief Financial Officer Agent. Evaluate cost, revenue, affordability, profitability, and financial risks. Provide clear financial recommendations and explicit financial assumptions.\n\nBusiness Brief:\n{{ $('Node 2: Set Brief & baseline State').item.json.is_surprise_round ? $('Node 2: Set Brief & baseline State').item.json.business_challenge + ' SURPRISE CONDITION: ' + $('Node 2: Set Brief & baseline State').item.json.surprise_condition : $('Node 2: Set Brief & baseline State').item.json.business_challenge }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        0
+      ],
+      "id": "9ea61225-9fc6-46c3-89b5-09e16b58db0e",
+      "name": "Node 4: Finance Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Marketing and Sales Agent. Define target customers, positioning, channels, and customer acquisition strategies. Provide a clear go-to-market recommendation.\n\nBusiness Brief:\n{{ $('Node 2: Set Brief & baseline State').item.json.is_surprise_round ? $('Node 2: Set Brief & baseline State').item.json.business_challenge + ' SURPRISE CONDITION: ' + $('Node 2: Set Brief & baseline State').item.json.surprise_condition : $('Node 2: Set Brief & baseline State').item.json.business_challenge }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        464,
+        208
+      ],
+      "id": "124c94b7-5404-425b-a384-0f0d0683658f",
+      "name": "Node 5: Marketing Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        -32
+      ],
+      "id": "5d2752f5-dd03-40bb-8138-8e1ccc62d6a2",
+      "name": "Node 6: Combine Department State"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inject default output if an individual agent fails or returns empty data\nconst research = $('Node 3: Research Agent').first()?.json?.text || \"FALLBACK: Research findings unavailable due to agent timeout.\";\nconst finance = $('Node 4: Finance Agent').first()?.json?.text || \"FALLBACK: Finance baseline defaults applied.\";\nconst marketing = $('Node 5: Marketing Agent').first()?.json?.text || \"FALLBACK: Marketing channels defaulted to direct outbound.\";\n\nreturn [{\n  json: {\n    research_output: research,\n    finance_output: finance,\n    marketing_output: marketing\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        -16
+      ],
+      "id": "0374524e-7d87-4004-aec1-15d074ab33f7",
+      "name": "Node 7: Fallback Handler",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Boardroom Challenger Agent. Review the department findings:\n\nRESEARCH: {{ $json.research_output }}\nFINANCE: {{ $json.finance_output }}\nMARKETING: {{ $json.marketing_output }}\n\nCRITICAL MANDATE: You must question or reject at least one material recommendation or assumption made by Finance or Marketing. Point out why their strategy is overly optimistic or risky, and demand a justification.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1360,
+        -16
+      ],
+      "id": "ea9aee6c-9867-4d77-a31b-44d9e359712c",
+      "name": "Node 8:Challenger Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the Strategic Operations Agent. \nReview the primary department findings and the disagreement raised by the Challenger Agent:\n\nCHALLENGER DEBATE: {{ $json.text }}\n\nFormulate EXACTLY TWO viable, competing business strategies for the CEO:\n- Strategy A: Aggressive Growth Path (High Risk, High Return)\n- Strategy B: Risk-Mitigated Operational Path (Lower Margin, Higher Stability)\n\nList explicit trade-offs and risks for both strategies.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1744,
+        -32
+      ],
+      "id": "5e562f4f-63f1-4cb7-aed5-d86f667bccce",
+      "name": "Node 9: Strategy Generator Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are the CEO Agent. Your job is to compare alternatives, resolve conflicts, and issue the final company decision.\n\nINPUT TRACE:\nResearch Findings: {{ $('Node 7: Fallback Handler').item.json.research_output }}\nFinance Findings: {{ $('Node 7: Fallback Handler').item.json.finance_output }}\nMarketing Findings: {{ $('Node 7: Fallback Handler').item.json.marketing_output }}\nChallenger Debate: {{ $('Node 8:Challenger Agent').item.json.text }}\nStrategy Alternatives: {{ $('Node 9: Strategy Generator Agent').item.json.text }}\n\nRespond strictly in valid JSON using this format:\n{\n  \"final_decision\": \"One clear statement defining the selected strategy.\",\n  \"department_evidence\": \"Summary of evidence used from Research, Finance, and Marketing.\",\n  \"rejected_alternative\": \"State which strategy was rejected and why.\",\n  \"tradeoffs_and_risks\": \"Important trade-offs and risks accepted.\",\n  \"implementation_roadmap\": [\n    {\"step\": 1, \"function\": \"Finance\", \"action\": \"...\"},\n    {\"step\": 2, \"function\": \"Marketing\", \"action\": \"...\"},\n    {\"step\": 3, \"function\": \"Operations\", \"action\": \"...\"}\n  ],\n  \"business_kpis\": [\n    \"KPI 1 (Measurable target)\",\n    \"KPI 2 (Measurable target)\",\n    \"KPI 3 (Measurable target)\"\n  ]\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2112,
+        -48
+      ],
+      "id": "6319be16-b120-440d-8d7b-d276278b5361",
+      "name": "Node 10: CEO Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    status: \"success\",\n    timestamp: new Date().toISOString(),\n    trace: {\n      research: $('Node 3: Research Agent').first().json.message?.content || $('Node 3: Research Agent').first().json.text || $('Node 3: Research Agent').first().json.output || \"No text\",\n      finance: $('Node 4: Finance Agent').first().json.message?.content || $('Node 4: Finance Agent').first().json.text || $('Node 4: Finance Agent').first().json.output || \"No text\",\n      marketing: $('Node 5: Marketing Agent').first().json.message?.content || $('Node 5: Marketing Agent').first().json.text || $('Node 5: Marketing Agent').first().json.output || \"No text\",\n      challenger: $('Node 8:Challenger Agent').first().json.message?.content || $('Node 8:Challenger Agent').first().json.text || $('Node 8:Challenger Agent').first().json.output || \"No text\",\n      strategy: $('Node 9: Strategy Generator Agent').first().json.message?.content || $('Node 9: Strategy Generator Agent').first().json.text || $('Node 9: Strategy Generator Agent').first().json.output || \"No text\",\n      ceo_decision: $('Node 10: CEO Agent').first().json.message?.content || $('Node 10: CEO Agent').first().json.text || $('Node 10: CEO Agent').first().json.output || \"No text\"\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2512,
+        -64
+      ],
+      "id": "a9f20af8-2845-48a6-a15b-963887c4b7ee",
+      "name": "Node 11: Audit Trace Logger",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        416
+      ],
+      "id": "0b204388-3ff4-4619-857d-22fa4b48154e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JhUD1YAfhkMeN1jb",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Node 2: Set Brief & baseline State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 2: Set Brief & baseline State": {
+      "main": [
+        [
+          {
+            "node": "Node 3: Research Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Node 4: Finance Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Node 5: Marketing Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 5: Marketing Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 6: Combine Department State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 3: Research Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 6: Combine Department State",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Node 4: Finance Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 6: Combine Department State",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Node 6: Combine Department State": {
+      "main": [
+        [
+          {
+            "node": "Node 7: Fallback Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 7: Fallback Handler": {
+      "main": [
+        [
+          {
+            "node": "Node 8:Challenger Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 8:Challenger Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 9: Strategy Generator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 9: Strategy Generator Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 10: CEO Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node 10: CEO Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 11: Audit Trace Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Node 3: Research Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Node 4: Finance Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Node 5: Marketing Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Node 8:Challenger Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Node 9: Strategy Generator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Node 10: CEO Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "5ba9b86e-4c56-410b-a302-d04521643a60",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b85af2433816434d4dc269eea29825cb528771aa4831c2ea58a819b0482d32d"
+  },
+  "nodeGroups": [],
+  "id": "JrxH52NQEs01vcX8",
+  "tags": []
+}

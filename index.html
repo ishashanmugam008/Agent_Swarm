@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boardroom Multi-Agent Swarm Console</title>
+  <style>
+    :root {
+      --bg-main: #0b0f19;
+      --bg-card: #151c2c;
+      --bg-input: #1e293b;
+      --border: #334155;
+      --primary: #38bdf8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      margin: 0;
+      padding: 24px;
+    }
+
+    .dashboard {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 24px;
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    h2, h3 { color: var(--primary); margin-top: 0; }
+    
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: #fff;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+    
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #0284c7;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #0369a1; }
+
+    /* Node Tracker Styles */
+    .node-pipeline {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .node-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #0f172a;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .node-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #475569;
+    }
+    .node-step.active .node-indicator { background: var(--warning); box-shadow: 0 0 8px var(--warning); }
+    .node-step.completed .node-indicator { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .node-step.completed { border-color: #059669; }
+
+    /* Conversation Feed */
+    .chat-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .agent-message {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .agent-name { font-weight: bold; font-size: 14px; color: var(--primary); text-transform: uppercase; }
+    .agent-body { font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+
+    /* Decision Summary Card */
+    .ceo-card {
+      background: #064e3b;
+      border: 1px solid #10b981;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .ceo-card h2 { color: #a7f3d0; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <!-- Left Sidebar: Controls & Live Pipeline Progress -->
+  <div class="panel">
+    <h2>Swarm Controller</h2>
+    
+    <div class="form-group">
+      <label>Theme & Domain</label>
+      <select id="theme">
+        <option value="FinSwarm">Theme A: FinSwarm (Digital Lending)</option>
+        <option value="SaaSSwarm">Theme B: SaaS Swarm (Workflow Platform)</option>
+        <option value="ChipSwarm">Theme C: ChipSwarm (Packaging/Testing)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Test Case ID</label>
+      <input type="text" id="testCaseId" value="TC1">
+    </div>
+
+    <div class="form-group">
+      <label>Business Challenge</label>
+      <textarea id="challenge" rows="4">FinNova Capital has INR 30 crore available for a one-year small-business lending pilot and INR 60 lakh for customer acquisition. Select optimal segment mix, pricing, and launch plan.</textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Surprise Round Active?</label>
+      <select id="isSurprise">
+        <option value="false">No (Baseline TC1)</option>
+        <option value="true">Yes (Surprise Round)</option>
+      </select>
+    </div>
+
+    <button onclick="startSwarmExecution()">Run Agentic Swarm</button>
+
+    <h3 style="margin-top: 24px;">Node Execution Status</h3>
+    <div class="node-pipeline">
+      <div class="node-step" id="node-1"><div class="node-indicator"></div><span>1. Webhook Input</span></div>
+      <div class="node-step" id="node-2"><div class="node-indicator"></div><span>2. Set Brief & Baseline State</span></div>
+      <div class="node-step" id="node-3-5"><div class="node-indicator"></div><span>3-5. Parallel Department Agents</span></div>
+      <div class="node-step" id="node-6-7"><div class="node-indicator"></div><span>6-7. Combine State & Fallback</span></div>
+      <div class="node-step" id="node-8"><div class="node-indicator"></div><span>8. Challenger Agent</span></div>
+      <div class="node-step" id="node-9"><div class="node-indicator"></div><span>9. Strategy Generator Agent</span></div>
+      <div class="node-step" id="node-10"><div class="node-indicator"></div><span>10. CEO Agent (Final Decision)</span></div>
+      <div class="node-step" id="node-11"><div class="node-indicator"></div><span>11. Audit Trace Logger</span></div>
+    </div>
+  </div>
+
+  <!-- Right Main Area: Human-Readable Conversation & Results -->
+  <div>
+    <!-- Final Executive Summary Container -->
+    <div id="ceoDecisionContainer" style="display: none;" class="ceo-card">
+      <h2>CEO Final Strategy & Directive</h2>
+      <div id="ceoDecisionText" class="agent-body"></div>
+    </div>
+
+    <!-- Agent Conversation Feed -->
+    <div class="panel">
+      <h2>Boardroom Agent Collaboration Log</h2>
+      <div id="conversationFeed" class="chat-feed">
+        <div style="color: var(--text-muted); font-size: 14px;">Click <b>Run Agentic Swarm</b> to start node execution and view agent deliberations.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function setNodeStatus(nodeId, status) {
+    const el = document.getElementById(nodeId);
+    if (!el) return;
+    el.classList.remove('active', 'completed');
+    if (status === 'active') el.classList.add('active');
+    if (status === 'completed') el.classList.add('completed');
+  }
+
+  function formatAgentOutput(text) {
+    if (!text) return "No data output generated.";
+    
+    // Attempt to parse JSON and structure it neatly into human-readable text
+    try {
+      let obj = typeof text === 'object' ? text : JSON.parse(text);
+      let html = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+      
+      for (const [key, value] of Object.entries(obj)) {
+        let formattedKey = key.replace(/_/g, ' ').toUpperCase();
+        
+        if (Array.isArray(value)) {
+          html += `<div><strong>${formattedKey}:</strong><ul style="margin: 4px 0 8px 20px; padding-left: 0;">`;
+          value.forEach(item => {
+            if (typeof item === 'object' && item !== null) {
+              html += `<li style="margin-bottom: 4px;">${Object.entries(item).map(([k, v]) => `<strong>${k.replace(/_/g, ' ')}:</strong> ${v}`).join(' | ')}</li>`;
+            } else {
+              html += `<li style="margin-bottom: 4px;">${item}</li>`;
+            }
+          });
+          html += `</ul></div>`;
+        } else if (typeof value === 'object' && value !== null) {
+          html += `<div><strong>${formattedKey}:</strong><div style="margin-left: 10px; font-size: 13px; color: #cbd5e1;">`;
+          for (const [subKey, subVal] of Object.entries(value)) {
+            html += `<div><strong>${subKey.replace(/_/g, ' ')}:</strong> ${subVal}</div>`;
+          }
+          html += `</div></div>`;
+        } else {
+          html += `<div><strong>${formattedKey}:</strong> ${value}</div>`;
+        }
+      }
+      html += '</div>';
+      return html;
+    } catch (e) {
+      // Fallback for standard text outputs with line breaks preserved
+      if (typeof text === 'object') return JSON.stringify(text, null, 2);
+      return text.replace(/\n/g, '<br>');
+    }
+  }
+
+  async function startSwarmExecution() {
+    const feed = document.getElementById('conversationFeed');
+    const ceoContainer = document.getElementById('ceoDecisionContainer');
+    const ceoText = document.getElementById('ceoDecisionText');
+
+    feed.innerHTML = '<div style="color: var(--warning); font-size: 14px;">Running multi-agent reasoning models... Please wait while Groq/Gemini processes parallel department analysis.</div>';
+    ceoContainer.style.display = 'none';
+
+    // Step 1: Reset Node Tracker
+    ['node-1', 'node-2', 'node-3-5', 'node-6-7', 'node-8', 'node-9', 'node-10', 'node-11'].forEach(id => setNodeStatus(id, 'pending'));
+
+    // Step 2: Mark Webhook and Baseline as Done, set Parallel Agents as Active
+    setNodeStatus('node-1', 'completed');
+    setNodeStatus('node-2', 'completed');
+    setNodeStatus('node-3-5', 'active');
+
+    const payload = {
+      theme: document.getElementById('theme').value,
+      test_case_id: document.getElementById('testCaseId').value,
+      business_challenge: document.getElementById('challenge').value,
+      is_surprise_round: document.getElementById('isSurprise').value === 'true',
+      surprise_condition: ''
+    };
+
+    try {
+      // Step 3: Send Payload to n8n Webhook
+      const response = await fetch("http://localhost:5678/webhook-test/agentic-swarm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+      const trace = data.trace || data.swarm_trace || {};
+
+      // Step 4: Progressively Mark All Nodes as Completed on Output Arrival
+      setNodeStatus('node-3-5', 'completed');
+      setNodeStatus('node-6-7', 'completed');
+      setNodeStatus('node-8', 'completed');
+      setNodeStatus('node-9', 'completed');
+      setNodeStatus('node-10', 'completed');
+      setNodeStatus('node-11', 'completed');
+
+      feed.innerHTML = '';
+
+      // Step 5: Render CEO Decision Card
+      if (trace.ceo_decision) {
+        ceoContainer.style.display = 'block';
+        ceoText.innerHTML = formatAgentOutput(trace.ceo_decision);
+      }
+
+      // Step 6: Render Agent Collaboration Output Feed
+      const agentOrder = [
+        { key: 'research', label: 'Research & Intelligence Agent', color: '#38bdf8' },
+        { key: 'finance', label: 'Finance & Risk Treasury Agent', color: '#34d399' },
+        { key: 'marketing', label: 'Marketing & Sales Agent', color: '#f472b6' },
+        { key: 'challenger', label: 'Challenger / Red Team Agent', color: '#fbbf24' },
+        { key: 'strategy', label: 'Strategy Synthesizer Agent', color: '#a78bfa' }
+      ];
+
+      agentOrder.forEach(agent => {
+        if (trace[agent.key]) {
+          const msg = document.createElement('div');
+          msg.className = 'agent-message';
+          msg.style.borderLeftColor = agent.color;
+          msg.innerHTML = `
+            <div class="agent-header">
+              <span class="agent-name" style="color: ${agent.color}">${agent.label}</span>
+            </div>
+            <div class="agent-body">${formatAgentOutput(trace[agent.key])}</div>
+          `;
+          feed.appendChild(msg);
+        }
+      });
+
+    } catch (err) {
+      ['node-3-5', 'node-6-7', 'node-8', 'node-9', 'node-10', 'node-11'].forEach(id => setNodeStatus(id, 'pending'));
+      feed.innerHTML = '<div style="color: #ef4444; font-weight: bold;">Error executing swarm: Ensure n8n is running and "Listen for Test Event" is active on the Webhook node.</div>';
+    }
+  }
+</script>
+
+</body>
+</html>
