@@ -1,7 +1,7 @@
 # Boardroom Multi-Agent Swarm (FinSwarm / Boardroom Decision-Making)
 
 ## 1. Team Name and Member Names
-* **Team Name:** [Insert Team Name]
+* **Team name** TrioTech
 * **Members:** Isha S(25MID1083)
                Hasini CH (25MID1071)
                Sri Bavani AP (25MID1087)
@@ -20,16 +20,25 @@
 | **Strategy Synthesizer Agent** | Combines inputs and critical feedback into cohesive options. | Department notes & Challenger critiques | Unified strategic roadmap options |
 | **CEO Agent** | Evaluates options and issues the final executive decision. | Synthesized strategic options | Final decision, roadmap steps, trade-offs, and business KPIs |
 
-## 4. Installation and Execution Instructions
-1. **Import n8n Workflow:**
-   * Open your n8n instance.
-   * Go to **Workflows -> Import from File** and upload the provided workflow JSON file (`n8n_workflow.json`).
-   * Ensure your Groq or Gemini API credentials are correctly configured inside the AI nodes.
-2. **Launch Frontend Dashboard:**
-   * Open the `index.html` file in any modern web browser.
-3. **Execute Analysis:**
-   * In n8n, make sure your workflow is active or click **Listen for Test Event** on the Webhook node.
-   * In the browser dashboard, select your theme, test case ID, enter the challenge, and click **Run Agentic Swarm**.
+## 4. How to Open and Work With These Files
+
+### File Overview
+- **`Agent_Swarm_n8n.json`**: The core multi-agent workflow file containing the sequential and parallel agent nodes, prompt templates, and webhook handlers.
+- **`index.html`**: The user interface dashboard that lets you input challenge briefs and visualize real-time agent execution.
+
+### Step-by-Step Guide
+1. **Setting Up the n8n Workflow:**
+   - Launch your [n8n](https://github.com/ishashanmugam008/Agent_Swarm) instance (locally via Docker or through n8n Cloud).
+   - Go to your workflows dashboard, click **Import from File**, and upload `Agent_Swarm_n8n.json`.
+   - Open the Advanced AI nodes inside the workflow to configure your API credentials (Groq or Gemini).
+   - Activate the workflow or keep it set to listen for test events via the Webhook node.
+
+2. **Opening the Frontend Dashboard:**
+   - Simply double-click the `index.html` file on your computer to open it in any modern web browser (Chrome, Firefox, Edge, or Safari).
+   - Make sure your n8n webhook URL matches the endpoint expected by the frontend script if you are connecting a local instance.
+
+3. **Running an Execution:**
+   - In the browser dashboard, choose your theme and test case, fill out the challenge details, and click **Run Agentic Swarm** to trigger the agent pipeline.
 
 ## 5. Models, Frameworks, Datasets and External Services Used
 * **Workflow Automation Engine:** n8n (Self-hosted or Cloud)
